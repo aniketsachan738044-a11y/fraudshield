@@ -12,8 +12,13 @@ services:
         generateValue: true
       - key: DATABASE_URL
         value: sqlite:///./fraudshield.db
+      - key: AUTH_COOKIE_SECURE
+        value: true
+      - key: AUTH_COOKIE_SAMESITE
+        value: none
+      - key: PAYMENT_PROVIDER
+        value: sandbox
       - key: FRONTEND_URL
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
-

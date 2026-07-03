@@ -4,9 +4,12 @@ FraudShield is a full-stack fraud detection dashboard for UPI and banking-style 
 
 ## Highlights
 
-- JWT authentication with hashed passwords
+- JWT authentication with hashed passwords and HTTP-only session cookies
 - SQLite persistence through SQLAlchemy
 - Explainable fraud scoring with Isolation Forest plus rule-based reasons
+- Server-side payment intents with idempotency keys
+- Allow/review/block payment policy before provider handoff
+- Audit logs for auth and payment actions
 - Demo presets for low-risk, large trusted, and suspicious transactions
 - Dashboard with search, risk filters, CSV export, and clear-history reset
 - Analytics summary, risk breakdown, and demo model metrics
@@ -82,14 +85,15 @@ pytest
 ## Demo Flow
 
 1. Register a new user.
-2. Analyze the prefilled risky transaction.
-3. Read the risk reasons and recommendation.
-4. Open Dashboard to see saved history.
-5. Export the CSV report.
-6. Open Analytics to show risk distribution and model metrics.
+2. Create a payment intent from the prefilled risky transaction.
+3. Read the allow/review/block decision and risk reasons.
+4. Try the Low risk preset and use Sandbox approve.
+5. Open Dashboard to see saved history.
+6. Export the CSV report.
+7. Open Analytics to show risk distribution and model metrics.
 
 ## Important Note
 
-This is a portfolio-grade fraud detection system, not a bank-production fraud engine. The model metrics use synthetic labeled examples because real financial fraud datasets are sensitive and difficult to access.
+This is a portfolio-grade fraud detection and sandbox payment-risk system, not a live money movement product. The model metrics use synthetic labeled examples because real financial fraud datasets are sensitive and difficult to access.
 
-For a stronger version, add PostgreSQL, real anonymized transaction data, retraining jobs, role-based access, and monitoring.
+For real money, keep FraudShield behind a licensed payment gateway, replace SQLite with managed PostgreSQL, complete legal/compliance review, add OTP/MFA, webhook signature verification, monitoring, incident response, and independent security testing.

@@ -1,21 +1,13 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-
-function getToken() {
-  return localStorage.getItem("fraudshield_token");
-}
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", "application/json");
-
-  const token = getToken();
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+  if (options.body) headers.set("Content-Type", "application/json");
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   const contentType = response.headers.get("content-type") || "";
@@ -32,8 +24,17 @@ async function request(path, options = {}) {
 export const api = {
   login: (data) => request("/auth/login", { method: "POST", body: JSON.stringify(data) }),
   register: (data) => request("/auth/register", { method: "POST", body: JSON.stringify(data) }),
+  logout: () => request("/auth/logout", { method: "POST" }),
   me: () => request("/auth/me"),
   analyze: (data) => request("/transactions/analyze", { method: "POST", body: JSON.stringify(data) }),
+  createPaymentIntent: (data, idempotencyKey) =>
+    request("/payments/intents", {
+      method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey },
+      body: JSON.stringify(data),
+    }),
+  confirmPaymentIntent: (intentId) => request(`/payments/intents/${intentId}/sandbox-confirm`, { method: "POST" }),
+  paymentIntents: () => request("/payments/intents"),
   clearTransactions: () => request("/transactions", { method: "DELETE" }),
   transactions: (params = {}) => {
     const search = new URLSearchParams();
@@ -49,11 +50,7 @@ export const api = {
 };
 
 export async function downloadCsv() {
-  const headers = new Headers();
-  const token = getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  const response = await fetch(`${API_URL}/transactions/export.csv`, { headers });
+  const response = await fetch(`${API_URL}/transactions/export.csv`, { credentials: "include" });
   if (!response.ok) throw new Error("Could not export report");
 
   const blob = await response.blob();

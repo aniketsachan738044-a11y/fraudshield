@@ -7,6 +7,9 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 TransactionType = Literal["upi", "bank_transfer", "card", "wallet", "atm"]
 Channel = Literal["mobile_app", "web", "qr", "payment_link", "pos", "atm"]
 RiskLevel = Literal["low", "medium", "high"]
+Currency = Literal["INR"]
+PaymentStatus = Literal["ready_for_provider", "requires_review", "blocked", "approved_sandbox"]
+PaymentDecision = Literal["allow", "review", "block"]
 
 
 class UserCreate(BaseModel):
@@ -76,6 +79,37 @@ class AnalyzeResponse(BaseModel):
     confidence: float
 
 
+class PaymentIntentCreate(TransactionCreate):
+    currency: Currency = "INR"
+
+
+class PaymentIntentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    transaction_id: int
+    idempotency_key: str
+    provider: str
+    provider_reference: str | None
+    status: PaymentStatus
+    amount: float
+    currency: Currency
+    receiver_id: str
+    risk_score: float
+    risk_level: RiskLevel
+    confidence: float
+    decision: PaymentDecision
+    decision_reason: str
+    created_at: datetime
+    updated_at: datetime
+    transaction: TransactionRead
+
+
+class PaymentIntentResponse(BaseModel):
+    intent: PaymentIntentRead
+    confidence: float
+
+
 class AnalyticsSummary(BaseModel):
     total_transactions: int
     total_amount: float
@@ -97,4 +131,3 @@ class ModelMetrics(BaseModel):
     f1_score: float
     confusion_matrix: list[list[int]]
     note: str
-

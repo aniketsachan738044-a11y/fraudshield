@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CreditCard, ShieldAlert, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { api } from "../api/client.js";
 import { RiskBadge } from "../components/RiskBadge.jsx";
@@ -60,6 +60,7 @@ export function Analyze() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -75,19 +76,40 @@ export function Analyze() {
       const payload = {
         ...form,
         amount: Number(form.amount),
+        currency: "INR",
         receiver_age_days: Number(form.receiver_age_days),
         hour: Number(form.hour),
         device_trust_score: Number(form.device_trust_score),
       };
-      const response = await api.analyze(payload);
+      const idempotencyKey = `intent-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`}`;
+      const response = await api.createPaymentIntent(payload, idempotencyKey);
       setResult(response);
-      setNotice(`Transaction #${response.transaction.id} saved to dashboard`);
+      setNotice(`Payment intent #${response.intent.id} created with ${response.intent.decision} decision`);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }
+
+  async function handleSandboxConfirm() {
+    setConfirming(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const updatedIntent = await api.confirmPaymentIntent(result.intent.id);
+      setResult((current) => ({ ...current, intent: updatedIntent }));
+      setNotice(`Sandbox provider approved ${updatedIntent.provider_reference}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setConfirming(false);
+    }
+  }
+
+  const intent = result?.intent;
+  const transaction = intent?.transaction;
 
   return (
     <div className="page-grid">
@@ -204,7 +226,7 @@ export function Analyze() {
 
           <button className="primary-btn full-span" disabled={loading}>
             <ShieldAlert size={18} />
-            {loading ? "Analyzing..." : "Analyze risk"}
+            {loading ? "Creating intent..." : "Create payment intent"}
           </button>
         </form>
       </section>
@@ -218,23 +240,40 @@ export function Analyze() {
         {!result ? (
           <div className="empty-state">
             <AlertTriangle size={30} />
-            <p>Submit a transaction to generate a score and explanation.</p>
+            <p>Submit a payment to generate a server-side decision.</p>
           </div>
         ) : (
           <>
             <div className="result-topline">
-              <RiskBadge level={result.transaction.risk_level} />
-              <ScoreBar score={result.transaction.risk_score} />
+              <RiskBadge level={transaction.risk_level} />
+              <ScoreBar score={transaction.risk_score} />
             </div>
 
             <div className="recommendation">
               <CheckCircle2 size={19} />
-              <strong>{result.transaction.recommendation}</strong>
+              <strong>{transaction.recommendation}</strong>
               <span>{Math.round(result.confidence * 100)}% confidence</span>
             </div>
 
+            <div className={`payment-decision ${intent.decision}`}>
+              <CreditCard size={19} />
+              <div>
+                <strong>{intent.decision.toUpperCase()} · {intent.status.replaceAll("_", " ")}</strong>
+                <span>{intent.decision_reason}</span>
+              </div>
+            </div>
+
+            {intent.provider_reference && <p className="provider-ref">Provider reference: {intent.provider_reference}</p>}
+
+            {intent.status === "ready_for_provider" && (
+              <button className="primary-btn" onClick={handleSandboxConfirm} disabled={confirming}>
+                <CreditCard size={18} />
+                {confirming ? "Confirming..." : "Sandbox approve"}
+              </button>
+            )}
+
             <div className="reason-list">
-              {result.transaction.explanations.map((reason) => (
+              {transaction.explanations.map((reason) => (
                 <article key={reason.code} className={`reason ${reason.severity}`}>
                   <strong>{reason.title}</strong>
                   <p>{reason.detail}</p>
