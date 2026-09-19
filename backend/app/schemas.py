@@ -213,3 +213,47 @@ class RetrainResponse(BaseModel):
     recall: float
     f1_score: float
     message: str
+
+
+class GraphNode(BaseModel):
+    id: str
+    label: str
+    type: str  # "sender", "receiver", "mule", "blocked"
+    risk_score: float
+    tx_count: int
+    total_amount: float
+
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+    amount: float
+    risk_level: str
+    risk_score: float
+    channel: str
+    created_at: datetime
+
+
+class NetworkGraphResponse(BaseModel):
+    nodes: list[GraphNode]
+    edges: list[GraphEdge]
+    mule_clusters_detected: int
+    high_risk_connections: int
+
+
+class CaseInvestigationRequest(BaseModel):
+    transaction_id: int | None = None
+    query: str | None = None
+
+
+class SARReportResponse(BaseModel):
+    filing_id: str
+    generated_at: str
+    subject_account: str
+    risk_score: float
+    summary: str
+    forensic_timeline: list[str]
+    regulatory_violations: list[str]
+    recommended_actions: list[str]
+    formal_sar_narrative: str
+

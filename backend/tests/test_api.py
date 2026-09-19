@@ -609,3 +609,80 @@ def test_notifications_dispatcher_and_geoip() -> None:
     d_city, _, _ = resolve_ip_location("127.0.0.1")
     assert d_city == "Delhi"
 
+
+def test_network_graph_api() -> None:
+    token = register_user()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Create transactions to different counterparties
+    client.post(
+        "/api/transactions/analyze",
+        headers=headers,
+        json={
+            "amount": 3500,
+            "transaction_type": "upi",
+            "channel": "mobile_app",
+            "receiver_id": "graph-vendor-clean",
+            "receiver_age_days": 200,
+            "device_trust_score": 0.95,
+        },
+    )
+    client.post(
+        "/api/transactions/analyze",
+        headers=headers,
+        json={
+            "amount": 89000,
+            "transaction_type": "upi",
+            "channel": "payment_link",
+            "receiver_id": "graph-mule-suspect",
+            "receiver_age_days": 1,
+            "device_trust_score": 0.15,
+        },
+    )
+
+    response = client.get("/api/analytics/network-graph", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "nodes" in data and "edges" in data
+    assert len(data["nodes"]) >= 3  # sender + 2 receivers
+    assert len(data["edges"]) >= 2
+    assert any(n["type"] == "sender" for n in data["nodes"])
+    assert any(n["type"] == "mule" for n in data["nodes"])
+
+
+def test_ai_case_investigator_and_sar_generation() -> None:
+    token = register_user()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Add a high-risk transaction
+    tx_res = client.post(
+        "/api/transactions/analyze",
+        headers=headers,
+        json={
+            "amount": 99000,
+            "transaction_type": "upi",
+            "channel": "payment_link",
+            "receiver_id": "suspicious-syndicate@upi",
+            "receiver_age_days": 1,
+            "device_trust_score": 0.1,
+            "location_mismatch": True,
+        },
+    )
+    tx_id = tx_res.json()["transaction"]["id"]
+
+    # Generate SAR report
+    sar_res = client.post(
+        "/api/analytics/investigate-case",
+        headers=headers,
+        json={"transaction_id": tx_id},
+    )
+    assert sar_res.status_code == 200
+    sar = sar_res.json()
+    assert sar["filing_id"].startswith("SAR-IND-")
+    assert sar["risk_score"] >= 65.0
+    assert len(sar["forensic_timeline"]) >= 2
+    assert len(sar["regulatory_violations"]) >= 1
+    assert len(sar["recommended_actions"]) >= 1
+    assert "SUSPICIOUS ACTIVITY REPORT" in sar["formal_sar_narrative"]
+
+

@@ -6,6 +6,8 @@ import { Analytics } from "./pages/Analytics.jsx";
 import { Analyze } from "./pages/Analyze.jsx";
 import { AuthPage } from "./pages/AuthPage.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
+import { DeveloperPortal } from "./pages/DeveloperPortal.jsx";
+import { NetworkGraph } from "./pages/NetworkGraph.jsx";
 import { RuleStudio } from "./pages/RuleStudio.jsx";
 
 export default function App() {
@@ -34,9 +36,12 @@ export default function App() {
         {activeTab === "analyze" && <Analyze />}
         {activeTab === "dashboard" && <Dashboard />}
         {activeTab === "analytics" && <Analytics />}
+        {activeTab === "network" && <NetworkGraph />}
         {activeTab === "rules" && <RuleStudio />}
+        {activeTab === "developer" && <DeveloperPortal />}
       </Shell>
     </ErrorBoundary>
   );
 }
+
 

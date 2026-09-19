@@ -1,4 +1,4 @@
-import { Activity, BarChart3, LogOut, Menu, ShieldCheck, SlidersHorizontal, Table2, X } from "lucide-react";
+import { Activity, BarChart3, Code2, LogOut, Menu, Network, ShieldCheck, SlidersHorizontal, Table2, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
 
@@ -6,8 +6,11 @@ const tabs = [
   { id: "analyze", label: "Analyze", icon: Activity },
   { id: "dashboard", label: "Dashboard", icon: Table2 },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "network", label: "Network Graph", icon: Network },
   { id: "rules", label: "Rule Studio", icon: SlidersHorizontal },
+  { id: "developer", label: "Developer API", icon: Code2 },
 ];
+
 
 export function Shell({ activeTab, setActiveTab, children }) {
   const [open, setOpen] = useState(false);

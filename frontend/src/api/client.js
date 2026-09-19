@@ -58,7 +58,10 @@ export const api = {
   deleteBlocklist: (id) => request(`/rules/blocklist/${id}`, { method: "DELETE" }),
   submitFeedback: (txId, data) => request(`/transactions/${txId}/feedback`, { method: "POST", body: JSON.stringify(data) }),
   retrainModel: () => request("/analytics/retrain", { method: "POST" }),
+  networkGraph: () => request("/analytics/network-graph"),
+  investigateCase: (data) => request("/analytics/investigate-case", { method: "POST", body: JSON.stringify(data || {}) }),
 };
+
 
 
 export async function downloadCsv() {
