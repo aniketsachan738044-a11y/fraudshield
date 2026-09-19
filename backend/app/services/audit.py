@@ -5,6 +5,7 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 
 from app.models import AuditLog, User
+from app.rate_limit import get_client_ip
 
 
 def write_audit_log(
@@ -20,7 +21,7 @@ def write_audit_log(
         user_id=user.id if user else None,
         event_type=event_type,
         status=status,
-        ip_address=request.client.host if request and request.client else None,
+        ip_address=get_client_ip(request) if request else None,
         user_agent=user_agent[:255] if user_agent else None,
         details_json=json.dumps(details or {}, default=str),
     )

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db
 from app.logging_config import configure_logging
-from app.routes import analytics, auth, payments, transactions
+from app.routes import analytics, auth, payments, rules, transactions
 
 
 settings = get_settings()
@@ -43,3 +43,4 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(payments.router, prefix="/api")
+app.include_router(rules.router, prefix="/api")

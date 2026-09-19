@@ -38,11 +38,16 @@ class Transaction(Base):
     device_trust_score: Mapped[float] = mapped_column(Float, default=0.75)
     location_mismatch: Mapped[bool] = mapped_column(Boolean, default=False)
     is_international: Mapped[bool] = mapped_column(Boolean, default=False)
+    location_city: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    location_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    location_lon: Mapped[float | None] = mapped_column(Float, nullable=True)
     note: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_fraud_confirmed: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
+    feedback_note: Mapped[str | None] = mapped_column(String(255), nullable=True)
     risk_score: Mapped[float] = mapped_column(Float, nullable=False)
     risk_level: Mapped[str] = mapped_column(String(20), index=True, nullable=False)
     recommendation: Mapped[str] = mapped_column(String(120), nullable=False)
-    explanation_json: Mapped[str] = mapped_column(Text, nullable=False)
+    explanation_json: Mapped[Text] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
 
     owner: Mapped[User] = relationship(back_populates="transactions")
@@ -67,6 +72,8 @@ class PaymentIntent(Base):
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     decision: Mapped[str] = mapped_column(String(20), index=True, nullable=False)
     decision_reason: Mapped[str] = mapped_column(String(255), nullable=False)
+    otp_code_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    otp_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
@@ -87,3 +94,16 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
 
     user: Mapped[User | None] = relationship(back_populates="audit_logs")
+
+
+class BlocklistEntry(Base):
+    __tablename__ = "blocklist_entries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
+    entry_type: Mapped[str] = mapped_column(String(40), index=True, nullable=False)  # 'receiver_id', 'ip_address'
+    value: Mapped[str] = mapped_column(String(160), index=True, nullable=False)
+    reason: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+
+    user: Mapped[User | None] = relationship()

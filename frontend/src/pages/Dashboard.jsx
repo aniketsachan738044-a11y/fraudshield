@@ -1,6 +1,6 @@
-import { Download, Filter, RefreshCw, Search, Trash2 } from "lucide-react";
+import { Download, FileText, Filter, RefreshCw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { api, downloadCsv } from "../api/client.js";
+import { api, downloadCsv, downloadPdf } from "../api/client.js";
 import { RiskBadge } from "../components/RiskBadge.jsx";
 import { ScoreBar } from "../components/ScoreBar.jsx";
 
@@ -12,6 +12,7 @@ export function Dashboard() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   async function loadTransactions() {
     setLoading(true);
@@ -41,6 +42,32 @@ export function Dashboard() {
       setError(err.message);
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function handleExportPdf() {
+    setExportingPdf(true);
+    setError("");
+    setNotice("");
+    try {
+      await downloadPdf();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
+  async function handleToggleFraud(id, isFraud) {
+    try {
+      const updated = await api.submitFeedback(id, {
+        is_fraud: isFraud,
+        note: isFraud ? "Customer chargeback confirmed" : "Verified legitimate",
+      });
+      setTransactions((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      setNotice(`Transaction #${id} audit status updated: ${isFraud ? "Confirmed Fraud" : "Clean"}`);
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -89,6 +116,10 @@ export function Dashboard() {
             <Download size={17} />
             CSV
           </button>
+          <button className="icon-text-btn dark" onClick={handleExportPdf} disabled={exportingPdf}>
+            <FileText size={17} />
+            PDF Report
+          </button>
           <button className="icon-text-btn danger" onClick={handleClear} disabled={loading || transactions.length === 0}>
             <Trash2 size={17} />
             Clear
@@ -121,6 +152,7 @@ export function Dashboard() {
                 <th>Risk</th>
                 <th>Score</th>
                 <th>Top reason</th>
+                <th>Audit Feedback</th>
                 <th>Time</th>
               </tr>
             </thead>
@@ -129,7 +161,7 @@ export function Dashboard() {
                 <tr key={tx.id}>
                   <td>
                     <strong>{tx.receiver_id}</strong>
-                    <span>{tx.channel.replace("_", " ")}</span>
+                    <span>{tx.location_city ? `${tx.channel.replace("_", " ")} • ${tx.location_city}` : tx.channel.replace("_", " ")}</span>
                   </td>
                   <td>{tx.transaction_type.replace("_", " ")}</td>
                   <td>Rs {Number(tx.amount).toLocaleString("en-IN")}</td>
@@ -140,6 +172,34 @@ export function Dashboard() {
                     <ScoreBar score={tx.risk_score} />
                   </td>
                   <td>{tx.explanations?.[0]?.title || "Normal pattern"}</td>
+                  <td>
+                    {tx.is_fraud_confirmed === true ? (
+                      <span
+                        style={{
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          background: "#fee2e2",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleToggleFraud(tx.id, false)}
+                        title="Click to reset"
+                      >
+                        CONFIRMED FRAUD
+                      </span>
+                    ) : (
+                      <button
+                        className="ghost-btn"
+                        style={{ fontSize: "0.75rem", padding: "2px 8px", border: "1px solid #cbd5e1", borderRadius: "4px" }}
+                        onClick={() => handleToggleFraud(tx.id, true)}
+                        title="Mark as confirmed chargeback / fraud"
+                      >
+                        Flag Fraud
+                      </button>
+                    )}
+                  </td>
                   <td>{new Date(tx.created_at).toLocaleString()}</td>
                 </tr>
               ))}

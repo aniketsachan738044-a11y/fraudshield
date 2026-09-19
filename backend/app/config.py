@@ -20,6 +20,29 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     payment_provider: str = "sandbox"
     webhook_secret: str | None = None
+    trust_proxy_headers: bool = False
+    model_artifact_path: str = "artifacts/fraud_model.joblib"
+
+    # Stripe & Razorpay Gateway Credentials
+    stripe_secret_key: str | None = None
+    stripe_publishable_key: str | None = None
+    razorpay_key_id: str | None = None
+    razorpay_key_secret: str | None = None
+
+    # Redis Distributed Store
+    redis_url: str | None = None
+
+    # Twilio SMS Credentials
+    twilio_account_sid: str | None = None
+    twilio_auth_token: str | None = None
+    twilio_from_number: str | None = None
+
+    # SMTP Email Credentials
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str = "noreply@fraudshield.internal"
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> "Settings":

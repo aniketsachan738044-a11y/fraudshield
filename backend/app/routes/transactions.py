@@ -1,16 +1,19 @@
 from io import StringIO
 import csv
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Transaction, User
-from app.schemas import AnalyzeResponse, RiskLevel, TransactionCreate, TransactionRead
+from app.models import PaymentIntent, Transaction, User
+from app.routes.payments import compute_user_context
+from app.schemas import AnalyzeResponse, RiskLevel, TransactionCreate, TransactionFeedbackCreate, TransactionRead
 from app.security import get_current_user
+from app.services.audit import write_audit_log
 from app.services.fraud_engine import fraud_engine
+from app.services.pdf_report import generate_executive_fraud_pdf
 
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -28,6 +31,11 @@ def serialize_transaction(transaction: Transaction) -> TransactionRead:
         device_trust_score=transaction.device_trust_score,
         location_mismatch=transaction.location_mismatch,
         is_international=transaction.is_international,
+        location_city=transaction.location_city,
+        location_lat=transaction.location_lat,
+        location_lon=transaction.location_lon,
+        is_fraud_confirmed=transaction.is_fraud_confirmed,
+        feedback_note=transaction.feedback_note,
         note=transaction.note,
         risk_score=transaction.risk_score,
         risk_level=transaction.risk_level,
@@ -39,11 +47,19 @@ def serialize_transaction(transaction: Transaction) -> TransactionRead:
 
 @router.post("/analyze", response_model=AnalyzeResponse, status_code=status.HTTP_201_CREATED)
 def analyze_transaction(
+    request: Request,
     payload: TransactionCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> AnalyzeResponse:
-    result = fraud_engine.analyze(payload)
+    context, current_city, current_lat, current_lon = compute_user_context(
+        db,
+        current_user.id,
+        payload.receiver_id,
+        request=request,
+        simulated_city=payload.simulated_city,
+    )
+    result = fraud_engine.analyze(payload, context=context)
     transaction = Transaction(
         user_id=current_user.id,
         amount=payload.amount,
@@ -51,10 +67,13 @@ def analyze_transaction(
         channel=payload.channel,
         receiver_id=payload.receiver_id,
         receiver_age_days=payload.receiver_age_days,
-        hour=payload.hour,
+        hour=result.resolved_hour,
         device_trust_score=payload.device_trust_score,
         location_mismatch=payload.location_mismatch,
         is_international=payload.is_international,
+        location_city=current_city,
+        location_lat=current_lat,
+        location_lon=current_lon,
         note=payload.note,
         risk_score=result.risk_score,
         risk_level=result.risk_level,
@@ -89,11 +108,22 @@ def list_transactions(
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
 def clear_transactions(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> None:
+    tx_count = db.query(Transaction).filter(Transaction.user_id == current_user.id).count()
+    db.query(PaymentIntent).filter(PaymentIntent.user_id == current_user.id).delete(synchronize_session=False)
     db.query(Transaction).filter(Transaction.user_id == current_user.id).delete(synchronize_session=False)
     db.commit()
+    write_audit_log(
+        db,
+        current_user,
+        "transactions.cleared",
+        "success",
+        request,
+        {"cleared_count": tx_count},
+    )
 
 
 @router.get("/export.csv")
@@ -149,6 +179,25 @@ def export_transactions_csv(
     )
 
 
+@router.get("/export.pdf")
+def export_transactions_pdf(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> StreamingResponse:
+    records = (
+        db.query(Transaction)
+        .filter(Transaction.user_id == current_user.id)
+        .order_by(Transaction.created_at.desc())
+        .all()
+    )
+    pdf_buffer = generate_executive_fraud_pdf(current_user, records)
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=fraudshield-executive-report.pdf"},
+    )
+
+
 @router.get("/{transaction_id}", response_model=TransactionRead)
 def get_transaction(
     transaction_id: int,
@@ -163,3 +212,26 @@ def get_transaction(
     if transaction is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     return serialize_transaction(transaction)
+
+
+@router.post("/{transaction_id}/feedback", response_model=TransactionRead)
+def submit_transaction_feedback(
+    transaction_id: int,
+    payload: TransactionFeedbackCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> TransactionRead:
+    transaction = (
+        db.query(Transaction)
+        .filter(Transaction.id == transaction_id, Transaction.user_id == current_user.id)
+        .first()
+    )
+    if transaction is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+
+    transaction.is_fraud_confirmed = payload.is_fraud
+    transaction.feedback_note = payload.note
+    db.commit()
+    db.refresh(transaction)
+    return serialize_transaction(transaction)
+

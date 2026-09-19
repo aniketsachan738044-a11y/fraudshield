@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Transaction, User
-from app.schemas import AnalyticsSummary, ModelMetrics, RiskBreakdownItem
+from app.schemas import AnalyticsSummary, ModelMetrics, RetrainResponse, RiskBreakdownItem
 from app.security import get_current_user
 from app.services.fraud_engine import fraud_engine
 
@@ -61,4 +61,21 @@ def risk_breakdown(
 @router.get("/model-metrics", response_model=ModelMetrics)
 def model_metrics(_: User = Depends(get_current_user)) -> ModelMetrics:
     return fraud_engine.evaluate_demo_model()
+
+
+@router.post("/retrain", response_model=RetrainResponse)
+def retrain_model(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RetrainResponse:
+    feedback_records = (
+        db.query(Transaction)
+        .filter(Transaction.user_id == current_user.id, Transaction.is_fraud_confirmed.isnot(None))
+        .all()
+    )
+    if not feedback_records:
+        feedback_records = db.query(Transaction).filter(Transaction.user_id == current_user.id).limit(100).all()
+
+    return fraud_engine.retrain_with_feedback(feedback_records)
+
 

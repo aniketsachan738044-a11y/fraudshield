@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, CreditCard, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CreditCard, KeyRound, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { api } from "../api/client.js";
 import { RiskBadge } from "../components/RiskBadge.jsx";
@@ -52,6 +52,21 @@ const presets = [
     label: "Scam risk",
     values: initialForm,
   },
+  {
+    label: "Velocity spike",
+    values: {
+      amount: 45000,
+      transaction_type: "upi",
+      channel: "qr",
+      receiver_id: "fresh-vendor-88",
+      receiver_age_days: 10,
+      hour: "",
+      device_trust_score: 0.65,
+      location_mismatch: false,
+      is_international: false,
+      note: "Burst payment test",
+    },
+  },
 ];
 
 export function Analyze() {
@@ -61,6 +76,9 @@ export function Analyze() {
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [otpPrompt, setOtpPrompt] = useState(null);
+  const [otpInput, setOtpInput] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -71,6 +89,8 @@ export function Analyze() {
     setLoading(true);
     setError("");
     setNotice("");
+    setOtpPrompt(null);
+    setOtpInput("");
 
     try {
       const payload = {
@@ -78,7 +98,7 @@ export function Analyze() {
         amount: Number(form.amount),
         currency: "INR",
         receiver_age_days: Number(form.receiver_age_days),
-        hour: Number(form.hour),
+        hour: form.hour === "" || form.hour === null || form.hour === undefined ? null : Number(form.hour),
         device_trust_score: Number(form.device_trust_score),
       };
       const idempotencyKey = `intent-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`}`;
@@ -105,6 +125,43 @@ export function Analyze() {
       setError(err.message);
     } finally {
       setConfirming(false);
+    }
+  }
+
+  async function handleRequestOtp() {
+    setOtpLoading(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await api.requestOtp(result.intent.id);
+      setOtpPrompt(response);
+      if (response.demo_otp) {
+        setOtpInput(response.demo_otp);
+      }
+      setNotice(response.message);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
+  async function handleVerifyOtp(event) {
+    if (event) event.preventDefault();
+    if (!otpInput) return;
+    setOtpLoading(true);
+    setError("");
+    setNotice("");
+    try {
+      const updatedIntent = await api.verifyOtp(result.intent.id, otpInput);
+      setResult((current) => ({ ...current, intent: updatedIntent }));
+      setOtpPrompt(null);
+      setOtpInput("");
+      setNotice(`Step-up identity verified! Provider reference: ${updatedIntent.provider_reference}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setOtpLoading(false);
     }
   }
 
@@ -182,8 +239,15 @@ export function Analyze() {
           </label>
 
           <label>
-            Hour
-            <input min="0" max="23" type="number" value={form.hour} onChange={(event) => updateField("hour", event.target.value)} />
+            Hour (0-23)
+            <input
+              min="0"
+              max="23"
+              type="number"
+              placeholder="Auto (server time)"
+              value={form.hour ?? ""}
+              onChange={(event) => updateField("hour", event.target.value)}
+            />
           </label>
 
           <label>
@@ -270,6 +334,47 @@ export function Analyze() {
                 <CreditCard size={18} />
                 {confirming ? "Confirming..." : "Sandbox approve"}
               </button>
+            )}
+
+            {intent.status === "requires_review" && (
+              <div className="step-up-card">
+                <div className="step-up-header">
+                  <KeyRound size={18} />
+                  <strong>Step-up identity verification</strong>
+                </div>
+                <p className="step-up-desc">
+                  This transaction is in review mode. Authorize via 2FA OTP challenge to approve provider handoff.
+                </p>
+                {!otpPrompt ? (
+                  <button className="primary-btn" onClick={handleRequestOtp} disabled={otpLoading}>
+                    <KeyRound size={18} />
+                    {otpLoading ? "Requesting OTP..." : "Request 2FA OTP"}
+                  </button>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="otp-form">
+                    <label>
+                      Enter 6-digit OTP
+                      <input
+                        type="text"
+                        maxLength={6}
+                        placeholder="123456"
+                        value={otpInput}
+                        onChange={(e) => setOtpInput(e.target.value)}
+                        required
+                      />
+                    </label>
+                    {otpPrompt.demo_otp && (
+                      <span className="demo-otp-badge">
+                        Demo Code: <strong>{otpPrompt.demo_otp}</strong>
+                      </span>
+                    )}
+                    <button className="primary-btn" disabled={otpLoading || !otpInput}>
+                      <ShieldCheck size={18} />
+                      {otpLoading ? "Verifying..." : "Verify & Approve Payment"}
+                    </button>
+                  </form>
+                )}
+              </div>
             )}
 
             <div className="reason-list">

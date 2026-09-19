@@ -6,6 +6,7 @@ import { Analytics } from "./pages/Analytics.jsx";
 import { Analyze } from "./pages/Analyze.jsx";
 import { AuthPage } from "./pages/AuthPage.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
+import { RuleStudio } from "./pages/RuleStudio.jsx";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("analyze");
@@ -33,6 +34,7 @@ export default function App() {
         {activeTab === "analyze" && <Analyze />}
         {activeTab === "dashboard" && <Dashboard />}
         {activeTab === "analytics" && <Analytics />}
+        {activeTab === "rules" && <RuleStudio />}
       </Shell>
     </ErrorBoundary>
   );

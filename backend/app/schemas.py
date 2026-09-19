@@ -8,8 +8,34 @@ TransactionType = Literal["upi", "bank_transfer", "card", "wallet", "atm"]
 Channel = Literal["mobile_app", "web", "qr", "payment_link", "pos", "atm"]
 RiskLevel = Literal["low", "medium", "high"]
 Currency = Literal["INR"]
-PaymentStatus = Literal["ready_for_provider", "requires_review", "blocked", "approved_sandbox"]
+PaymentStatus = Literal[
+    "ready_for_provider",
+    "requires_review",
+    "blocked",
+    "approved_sandbox",
+    "approved_step_up",
+    "settled",
+    "failed",
+]
 PaymentDecision = Literal["allow", "review", "block"]
+
+
+class OTPRequestResponse(BaseModel):
+    message: str
+    demo_otp: str | None = None
+    expires_in_seconds: int = 600
+
+
+class OTPVerifyRequest(BaseModel):
+    otp: str = Field(min_length=4, max_length=10)
+
+
+class WebhookPayload(BaseModel):
+    event: str
+    intent_id: int | None = None
+    provider_reference: str | None = None
+    status: str | None = None
+    reason: str | None = None
 
 
 class UserCreate(BaseModel):
@@ -45,16 +71,29 @@ class FraudReason(BaseModel):
     severity: RiskLevel
 
 
+class UserTransactionContext(BaseModel):
+    tx_count_last_hour: int = 0
+    tx_count_last_5m: int = 0
+    avg_user_amount: float | None = None
+    is_new_receiver_for_user: bool = False
+    mule_distinct_receivers_15m: int = 0
+    is_blocked_counterparty: bool = False
+    impossible_travel_speed_kmh: float | None = None
+    prev_city: str | None = None
+    current_city: str | None = None
+
+
 class TransactionCreate(BaseModel):
     amount: float = Field(gt=0, le=1_000_000)
     transaction_type: TransactionType
     channel: Channel
     receiver_id: str = Field(min_length=3, max_length=120)
     receiver_age_days: int = Field(default=30, ge=0, le=3650)
-    hour: int = Field(ge=0, le=23)
+    hour: int | None = Field(default=None, ge=0, le=23)
     device_trust_score: float = Field(default=0.75, ge=0, le=1)
     location_mismatch: bool = False
     is_international: bool = False
+    simulated_city: str | None = Field(default=None, max_length=80)
     note: str | None = Field(default=None, max_length=255)
 
     @field_validator("receiver_id")
@@ -67,6 +106,12 @@ class TransactionRead(TransactionCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    hour: int
+    location_city: str | None = None
+    location_lat: float | None = None
+    location_lon: float | None = None
+    is_fraud_confirmed: bool | None = None
+    feedback_note: str | None = None
     risk_score: float
     risk_level: RiskLevel
     recommendation: str
@@ -131,3 +176,40 @@ class ModelMetrics(BaseModel):
     f1_score: float
     confusion_matrix: list[list[int]]
     note: str
+
+
+class BlocklistCreate(BaseModel):
+    entry_type: Literal["receiver_id", "ip_address"]
+    value: str = Field(min_length=2, max_length=160)
+    reason: str = Field(min_length=3, max_length=255)
+
+    @field_validator("value")
+    @classmethod
+    def clean_value(cls, v: str) -> str:
+        return v.strip().lower()
+
+
+class BlocklistRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    entry_type: str
+    value: str
+    reason: str
+    created_at: datetime
+
+
+class TransactionFeedbackCreate(BaseModel):
+    is_fraud: bool
+    note: str | None = Field(default=None, max_length=255)
+
+
+class RetrainResponse(BaseModel):
+    status: str
+    model_type: str
+    trained_samples: int
+    accuracy: float
+    precision: float
+    recall: float
+    f1_score: float
+    message: str
