@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { useCurrency } from "../context/CurrencyContext.jsx";
 import { COUNTRY_CURRENCY_MAP, formatCurrency, getCurrencyMeta } from "../utils/currency.js";
 
 // Web Audio API Synth for Threat Intercept Chime
@@ -129,7 +130,7 @@ export function LiveRadar() {
   const [active, setActive] = useState(true);
   const [speed, setSpeed] = useState(1400); // interval in ms
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const [currencyMode, setCurrencyMode] = useState("native"); // "native" | "INR" | "USD"
+  const { currency: currencyMode, setCurrency: setCurrencyMode } = useCurrency();
   const [blips, setBlips] = useState([]);
   const [stream, setStream] = useState([]);
   const [selectedTx, setSelectedTx] = useState(null);

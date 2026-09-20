@@ -1,6 +1,7 @@
-import { Activity, BarChart3, Code2, LogOut, Menu, Moon, Network, Radar, ShieldCheck, SlidersHorizontal, Sun, Table2, X, Zap } from "lucide-react";
+import { Activity, BarChart3, Code2, Coins, LogOut, Menu, Moon, Network, Radar, ShieldCheck, SlidersHorizontal, Sun, Table2, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
+import { useCurrency } from "../context/CurrencyContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 
 const tabs = [
@@ -18,6 +19,7 @@ export function Shell({ activeTab, setActiveTab, children }) {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { currency, cycleCurrency } = useCurrency();
 
   const cycleTheme = () => {
     if (theme === "dark") setTheme("light");
@@ -26,6 +28,7 @@ export function Shell({ activeTab, setActiveTab, children }) {
   };
 
   const themeLabel = theme === "light" ? "Light" : theme === "dark" ? "Dark" : "Custom";
+  const currencyLabel = currency === "INR" ? "₹ INR" : currency === "USD" ? "$ USD" : "Native";
 
   return (
     <div className="app-shell">
@@ -67,17 +70,26 @@ export function Shell({ activeTab, setActiveTab, children }) {
           <div className="footer-actions">
             <button
               type="button"
+              className="ghost-btn currency-btn"
+              onClick={cycleCurrency}
+              title={`Currency: ${currencyLabel} (Click to switch ₹ INR / $ USD / Native)`}
+            >
+              <Coins size={14} />
+              <span>{currencyLabel}</span>
+            </button>
+            <button
+              type="button"
               className="ghost-btn theme-mode-btn"
               onClick={cycleTheme}
               title={`Theme: ${themeLabel} (Click to switch Light / Dark / Custom)`}
             >
-              {theme === "light" && <Sun size={15} />}
-              {theme === "dark" && <Moon size={15} />}
-              {theme === "custom" && <Zap size={15} />}
+              {theme === "light" && <Sun size={14} />}
+              {theme === "dark" && <Moon size={14} />}
+              {theme === "custom" && <Zap size={14} />}
               <span>{themeLabel}</span>
             </button>
             <button type="button" className="ghost-btn logout-btn" onClick={logout}>
-              <LogOut size={15} />
+              <LogOut size={14} />
               Sign out
             </button>
           </div>
@@ -90,6 +102,17 @@ export function Shell({ activeTab, setActiveTab, children }) {
         </button>
         <strong>FraudShield</strong>
         <div className="mobile-topbar-right">
+          <button
+            type="button"
+            className="icon-btn currency-mobile-btn"
+            onClick={cycleCurrency}
+            title={`Currency: ${currencyLabel} (Click to switch)`}
+            aria-label="Switch currency"
+          >
+            <span style={{ fontWeight: 800, fontSize: 13 }}>
+              {currency === "INR" ? "₹" : currency === "USD" ? "$" : "🌐"}
+            </span>
+          </button>
           <button
             type="button"
             className="icon-btn theme-mobile-btn"
