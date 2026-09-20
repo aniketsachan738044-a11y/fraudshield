@@ -166,18 +166,23 @@ button {
   background:
     linear-gradient(135deg, rgba(20, 184, 166, 0.16), transparent 34%),
     linear-gradient(315deg, rgba(245, 158, 11, 0.16), transparent 28%),
-    #f6f7f4;
+    var(--bg-app, #f6f7f4);
 }
 
 .auth-hero h1 {
   margin: 20px 0 12px;
   font-size: clamp(42px, 7vw, 76px);
   line-height: 0.95;
+  color: var(--text-main, #0f172a) !important;
+}
+
+[data-theme="custom"] .auth-hero h1 {
+  color: #10b981 !important;
 }
 
 .auth-hero p {
   max-width: 440px;
-  color: #52606d;
+  color: var(--text-muted, #52606d) !important;
   font-size: 18px;
 }
 
@@ -355,8 +360,9 @@ select:focus {
   flex-direction: column;
   gap: 24px;
   padding: 22px;
-  background: #18202c;
-  color: white;
+  background: var(--bg-sidebar, #18202c);
+  border-right: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  color: var(--text-main, white);
 }
 
 .brand-row {
@@ -365,10 +371,26 @@ select:focus {
   gap: 12px;
 }
 
+.brand-row strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff !important;
+  letter-spacing: -0.01em;
+}
+
+[data-theme="custom"] .brand-row strong {
+  color: #10b981 !important;
+}
+
 .brand-row span {
   display: block;
-  color: #a7b6c2;
+  color: #94a3b8 !important;
   font-size: 13px;
+}
+
+[data-theme="custom"] .brand-row span {
+  color: #6ee7b7 !important;
 }
 
 .nav-list {
@@ -476,6 +498,7 @@ select:focus {
 }
 
 .mobile-topbar-right {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -490,6 +513,20 @@ select:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme="custom"] .theme-mobile-btn {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+}
+
+[data-theme="light"] .theme-mobile-btn {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #0284c7;
 }
 
 .mobile-topbar {
@@ -979,23 +1016,41 @@ td span {
     gap: 12px;
     min-height: 58px;
     padding: 0 16px;
-    background: white;
-    border-bottom: 1px solid #d8ded6;
+    background: var(--bg-surface, #ffffff);
+    border-bottom: 1px solid var(--card-border, #d8ded6);
+  }
+
+  .mobile-topbar strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main, #0f172a) !important;
+    letter-spacing: -0.01em;
+  }
+
+  [data-theme="custom"] .mobile-topbar strong {
+    color: #10b981 !important;
   }
 
   .topbar-logout {
-    margin-left: auto;
-    min-height: 38px;
+    min-height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 7px;
-    border: 0;
+    border: 1px solid rgba(239, 68, 68, 0.35);
     border-radius: 7px;
-    background: #fff1f0;
-    color: #b42318;
-    padding: 8px 10px;
-    font-weight: 800;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    padding: 6px 12px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .topbar-logout:hover {
+    background: rgba(239, 68, 68, 0.22);
+    color: #f87171;
   }
 
   .mobile-tabs {
@@ -1006,8 +1061,8 @@ td span {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     padding: 10px 16px;
-    background: rgba(246, 247, 244, 0.95);
-    border-bottom: 1px solid #d8ded6;
+    background: var(--bg-surface, rgba(246, 247, 244, 0.95));
+    border-bottom: 1px solid var(--card-border, #d8ded6);
     backdrop-filter: blur(10px);
   }
 
@@ -1017,16 +1072,23 @@ td span {
     justify-content: center;
     gap: 7px;
     min-height: 40px;
-    border: 0;
+    border: 1px solid var(--card-border, transparent);
     border-radius: 7px;
-    background: #eef2ed;
-    color: #334e68;
-    font-weight: 800;
+    background: var(--input-bg, #eef2ed);
+    color: var(--text-muted, #334e68);
+    font-weight: 700;
   }
 
   .mobile-tabs .active {
     background: #0f766e;
     color: white;
+    border-color: #0f766e;
+  }
+
+  [data-theme="custom"] .mobile-tabs .active {
+    background: #059669;
+    color: #ecfdf5;
+    border-color: #059669;
   }
 
   .icon-btn {
@@ -1034,7 +1096,10 @@ td span {
     height: 40px;
     display: grid;
     place-items: center;
-    background: #eef2ed;
+    background: var(--input-bg, #eef2ed);
+    color: var(--text-main, #52606d);
+    border: 1px solid var(--card-border, transparent);
+    border-radius: 8px;
   }
 
   .sidebar {
