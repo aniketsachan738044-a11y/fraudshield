@@ -1356,6 +1356,20 @@ td span {
   color: var(--text-main);
 }
 
+.currency-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.currency-select {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+[data-theme="custom"] .currency-select {
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
 /* Attack Incident Alert Banner */
 .attack-incident-banner {
   display: flex;

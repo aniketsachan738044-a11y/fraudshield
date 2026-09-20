@@ -164,7 +164,7 @@ export function Dashboard() {
                     <span>{tx.location_city ? `${tx.channel.replace("_", " ")} • ${tx.location_city}` : tx.channel.replace("_", " ")}</span>
                   </td>
                   <td>{tx.transaction_type.replace("_", " ")}</td>
-                  <td>Rs {Number(tx.amount).toLocaleString("en-IN")}</td>
+                  <td>₹ {Number(tx.amount).toLocaleString("en-IN")}</td>
                   <td>
                     <RiskBadge level={tx.risk_level} />
                   </td>

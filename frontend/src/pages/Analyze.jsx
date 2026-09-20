@@ -197,7 +197,7 @@ export function Analyze() {
 
         <form className="form-grid" onSubmit={handleSubmit}>
           <label>
-            Amount
+            Amount (₹ Rupees)
             <input type="number" value={form.amount} onChange={(event) => updateField("amount", event.target.value)} />
           </label>
 

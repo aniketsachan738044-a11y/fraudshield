@@ -1,6 +1,8 @@
 import {
   AlertTriangle,
+  Coins,
   Flame,
+  Globe,
   Pause,
   Play,
   Radar,
@@ -14,7 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { api } from "../api/client.js";
+import { COUNTRY_CURRENCY_MAP, formatCurrency, getCurrencyMeta } from "../utils/currency.js";
 
 // Web Audio API Synth for Threat Intercept Chime
 function playInterceptSound() {
@@ -41,17 +43,43 @@ function playInterceptSound() {
   }
 }
 
+// Global Merchants including India (Rupees ₹), US ($), UK (£), Europe (€), Switzerland (CHF), Japan (¥), UAE (AED), Nigeria (₦)
 const MERCHANTS = [
+  // India (Rupees ₹)
+  { name: "Flipkart Retail", category: "E-Commerce", city: "Bengaluru", country: "IN", avg: 4200 },
+  { name: "Swiggy Instamart", category: "Quick Commerce", city: "Mumbai", country: "IN", avg: 750 },
+  { name: "Zomato Dining", category: "Food Delivery", city: "Delhi", country: "IN", avg: 1450 },
+  { name: "Tata Neu Croma", category: "Electronics", city: "Pune", country: "IN", avg: 28500 },
+  { name: "Reliance Digital", category: "Retail", city: "Hyderabad", country: "IN", avg: 18200 },
+  { name: "Razorpay Gateway", category: "Fintech", city: "Bengaluru", country: "IN", avg: 3600 },
+
+  // United States (USD $)
   { name: "Apple Store", category: "Electronics", city: "Cupertino", country: "US", avg: 850 },
-  { name: "Amazon Marketplace", category: "Retail", city: "Seattle", country: "US", avg: 110 },
-  { name: "Binance On-Ramp", category: "Crypto", city: "Valletta", country: "MT", avg: 4200 },
+  { name: "Amazon Prime", category: "Retail", city: "Seattle", country: "US", avg: 110 },
   { name: "Steam Games", category: "Gaming", city: "Bellevue", country: "US", avg: 45 },
-  { name: "Uber Technologies", category: "Transport", city: "San Francisco", country: "US", avg: 28 },
-  { name: "Rolex Boutique", category: "Luxury Goods", city: "Geneva", country: "CH", avg: 12500 },
-  { name: "Stripe Checkout", category: "SaaS", city: "Dublin", country: "IE", avg: 199 },
-  { name: "Wise Wire Transfer", category: "Remittance", city: "London", country: "GB", avg: 3100 },
-  { name: "Target Stores", category: "Groceries", city: "Minneapolis", country: "US", avg: 72 },
-  { name: "Unknown Proxy Service", category: "VPN/Hosting", city: "Lagos", country: "NG", avg: 940 },
+
+  // United Kingdom (GBP £)
+  { name: "Wise Wire Transfer", category: "Remittance", city: "London", country: "GB", avg: 1800 },
+  { name: "Revolut UK", category: "Fintech", city: "London", country: "GB", avg: 620 },
+
+  // Europe (EUR €)
+  { name: "Binance Europe SEPA", category: "Crypto", city: "Frankfurt", country: "DE", avg: 3800 },
+  { name: "Stripe EU Checkout", category: "SaaS", city: "Dublin", country: "IE", avg: 240 },
+
+  // Switzerland (CHF)
+  { name: "Rolex Boutique", category: "Luxury Goods", city: "Geneva", country: "CH", avg: 14500 },
+
+  // Japan (JPY ¥)
+  { name: "Sony Shinjuku Center", category: "Electronics", city: "Tokyo", country: "JP", avg: 68000 },
+
+  // UAE (AED)
+  { name: "Dubai Mall Luxury", category: "Retail", city: "Dubai", country: "AE", avg: 9800 },
+
+  // Nigeria (NGN ₦)
+  { name: "Paystack Nigeria", category: "Fintech", city: "Lagos", country: "NG", avg: 340000 },
+
+  // Singapore (SGD S$)
+  { name: "GrabPay Services", category: "Transport/Food", city: "Singapore", country: "SG", avg: 85 },
 ];
 
 function generateRandomTx() {
@@ -61,23 +89,29 @@ function generateRandomTx() {
 
   let amount;
   if (isHighRisk) {
-    amount = Number((Math.random() * 8000 + 2500).toFixed(2));
+    amount = Number((merchant.avg * (Math.random() * 4 + 2.5)).toFixed(2));
   } else if (isSuspicious) {
-    amount = Number((Math.random() * 1200 + 300).toFixed(2));
+    amount = Number((merchant.avg * (Math.random() * 1.5 + 1.2)).toFixed(2));
   } else {
-    amount = Number((Math.random() * merchant.avg * 1.2 + 8).toFixed(2));
+    amount = Number((merchant.avg * (Math.random() * 0.8 + 0.4)).toFixed(2));
   }
 
   // Polar coordinates for radar display (angle 0-360, radius 15-90% based on risk)
   const angle = Math.random() * 360;
-  const risk = isHighRisk ? Math.floor(Math.random() * 20 + 80) : isSuspicious ? Math.floor(Math.random() * 30 + 45) : Math.floor(Math.random() * 35 + 5);
+  const risk = isHighRisk
+    ? Math.floor(Math.random() * 20 + 80)
+    : isSuspicious
+    ? Math.floor(Math.random() * 30 + 45)
+    : Math.floor(Math.random() * 35 + 5);
 
-  // Normal radius scaled by risk score: higher risk sits farther out or in critical zone
   const radius = Math.min(88, Math.max(16, (risk / 100) * 80 + (Math.random() * 10 - 5)));
+  const currencyMeta = getCurrencyMeta(merchant.country);
 
   return {
     id: `tx_${Math.random().toString(36).slice(2, 9)}`,
     amount,
+    currencyCode: currencyMeta.code,
+    currencySymbol: currencyMeta.symbol,
     merchant: merchant.name,
     category: merchant.category,
     city: merchant.city,
@@ -92,10 +126,10 @@ function generateRandomTx() {
 }
 
 export function LiveRadar() {
-  const radarSweepId = useId();
   const [active, setActive] = useState(true);
   const [speed, setSpeed] = useState(1400); // interval in ms
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [currencyMode, setCurrencyMode] = useState("native"); // "native" | "INR" | "USD"
   const [blips, setBlips] = useState([]);
   const [stream, setStream] = useState([]);
   const [selectedTx, setSelectedTx] = useState(null);
@@ -104,9 +138,9 @@ export function LiveRadar() {
   // HUD Metrics
   const [metrics, setMetrics] = useState({
     tps: 1.4,
-    interceptedCount: 18,
-    interceptedDollars: 42680,
-    totalScored: 142,
+    interceptedCount: 22,
+    interceptedInr: 3480000, // INR equivalent
+    totalScored: 154,
     avgLatency: 12,
   });
 
@@ -123,11 +157,16 @@ export function LiveRadar() {
     // Update telemetry
     setMetrics((prev) => {
       const isBlocked = tx.status === "BLOCKED";
+      // Convert to INR base for metrics telemetry (~83 INR per USD)
+      const meta = getCurrencyMeta(tx.country);
+      const usdVal = tx.amount * meta.rateToUsd;
+      const inrVal = usdVal * 83.5;
+
       return {
         ...prev,
         totalScored: prev.totalScored + 1,
         interceptedCount: isBlocked ? prev.interceptedCount + 1 : prev.interceptedCount,
-        interceptedDollars: isBlocked ? prev.interceptedDollars + tx.amount : prev.interceptedDollars,
+        interceptedInr: isBlocked ? prev.interceptedInr + inrVal : prev.interceptedInr,
         avgLatency: Math.round((prev.avgLatency * 9 + tx.latency) / 10),
       };
     });
@@ -154,25 +193,65 @@ export function LiveRadar() {
     };
   }, [active, speed, audioEnabled]);
 
-  // Attack Scenario: Card Testing Storm (12 micro-charges in 2.5 seconds)
+  // Attack Scenario 1: Indian UPI Fast-Smurfing Loop (₹49,999 below reporting limit)
+  const triggerUpiSmurfingAttack = async () => {
+    if (attackActive) return;
+    setAttackActive("UPI Smurfing Loop (India ₹)");
+
+    for (let i = 0; i < 6; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 280));
+      const tx = {
+        id: `upi_smurf_${Math.random().toString(36).slice(2, 7)}`,
+        amount: 49999, // Structured just below ₹50k PAN limit
+        currencyCode: "INR",
+        currencySymbol: "₹",
+        merchant: "UPI Rapid Transfer to New VPA",
+        category: "UPI Smurfing Mule",
+        city: "Mumbai / Pune",
+        country: "IN",
+        risk: 96,
+        status: "BLOCKED",
+        angle: 140 + (i * 18),
+        radius: 84,
+        timestamp: new Date().toLocaleTimeString(),
+        latency: 11,
+      };
+      pushTransaction(tx);
+    }
+
+    setTimeout(() => setAttackActive(null), 1200);
+  };
+
+  // Attack Scenario 2: Global Card Testing Storm (micro-charges in rotating currencies)
   const triggerCardTestingAttack = async () => {
     if (attackActive) return;
-    setAttackActive("Card Testing Storm");
+    setAttackActive("Global Card Testing Storm");
+
+    const samples = [
+      { country: "IN", amount: 140, merchant: "Razorpay Micro-Check" },
+      { country: "US", amount: 2.10, merchant: "Stripe Online Micro-Check" },
+      { country: "GB", amount: 1.65, merchant: "Wise Micro-Auth" },
+      { country: "DE", amount: 1.95, merchant: "Adyen SEPA Ping" },
+      { country: "JP", amount: 280, merchant: "GMO Payment Test" },
+    ];
 
     for (let i = 0; i < 10; i++) {
       await new Promise((resolve) => setTimeout(resolve, 220));
-      const amount = Number((Math.random() * 3.5 + 1.2).toFixed(2));
+      const s = samples[i % samples.length];
+      const meta = getCurrencyMeta(s.country);
       const tx = {
         id: `card_test_${Math.random().toString(36).slice(2, 7)}`,
-        amount,
-        merchant: "Stripe Online Micro-Check",
-        category: "Card Testing Bot",
-        city: "Rotated VPN Proxy",
-        country: "RU",
+        amount: s.amount,
+        currencyCode: meta.code,
+        currencySymbol: meta.symbol,
+        merchant: s.merchant,
+        category: "Carding Bot Net",
+        city: "Rotating Proxy Node",
+        country: s.country,
         risk: 94,
         status: "BLOCKED",
-        angle: 45 + (i * 12) + (Math.random() * 5),
-        radius: 82 + (Math.random() * 6),
+        angle: 45 + (i * 14),
+        radius: 82,
         timestamp: new Date().toLocaleTimeString(),
         latency: 9,
       };
@@ -182,25 +261,26 @@ export function LiveRadar() {
     setTimeout(() => setAttackActive(null), 1200);
   };
 
-  // Attack Scenario: Account Takeover (High-value rapid cashouts)
+  // Attack Scenario 3: Account Takeover (High-value rapid cashouts)
   const triggerAtoAttack = async () => {
     if (attackActive) return;
-    setAttackActive("Account Takeover (ATO)");
+    setAttackActive("Account Takeover (ATO Cashout)");
 
     for (let i = 0; i < 4; i++) {
       await new Promise((resolve) => setTimeout(resolve, 380));
-      const amount = Number((Math.random() * 3000 + 8500).toFixed(2));
       const tx = {
         id: `ato_spike_${Math.random().toString(36).slice(2, 7)}`,
-        amount,
-        merchant: "Binance Instant Wire Out",
+        amount: 485000, // ₹4.85 Lakhs
+        currencyCode: "INR",
+        currencySymbol: "₹",
+        merchant: "Instant IMPS / Wire Drain",
         category: "ATO Cashout",
-        city: "Impossible Travel (Lagos)",
-        country: "NG",
+        city: "Impossible Travel (Lagos / Mumbai)",
+        country: "IN",
         risk: 98,
         status: "BLOCKED",
         angle: 210 + (i * 20),
-        radius: 86,
+        radius: 88,
         timestamp: new Date().toLocaleTimeString(),
         latency: 14,
       };
@@ -210,32 +290,20 @@ export function LiveRadar() {
     setTimeout(() => setAttackActive(null), 1200);
   };
 
-  // Attack Scenario: Mule Smurfing Dispersal (Coordinated sub-$10k transfers)
-  const triggerMuleAttack = async () => {
-    if (attackActive) return;
-    setAttackActive("Mule Smurfing Ring");
-
-    for (let i = 0; i < 6; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 320));
-      const amount = Number((9400 + Math.random() * 450).toFixed(2));
-      const tx = {
-        id: `mule_loop_${Math.random().toString(36).slice(2, 7)}`,
-        amount,
-        merchant: "Cross-Border P2P Dispersal",
-        category: "Mule Structuring",
-        city: "Fan-out Shell Account",
-        country: "PA",
-        risk: 89,
-        status: "BLOCKED",
-        angle: 120 + (i * 16),
-        radius: 78,
-        timestamp: new Date().toLocaleTimeString(),
-        latency: 11,
-      };
-      pushTransaction(tx);
+  // Display amount formatter considering currency mode
+  const renderFormattedAmount = (amount, country) => {
+    if (currencyMode === "INR") {
+      const meta = getCurrencyMeta(country);
+      const inrAmount = (amount * meta.rateToUsd * 83.5);
+      return formatCurrency(inrAmount, "IN");
     }
-
-    setTimeout(() => setAttackActive(null), 1200);
+    if (currencyMode === "USD") {
+      const meta = getCurrencyMeta(country);
+      const usdAmount = (amount * meta.rateToUsd);
+      return formatCurrency(usdAmount, "US");
+    }
+    // Default: native country currency
+    return formatCurrency(amount, country);
   };
 
   const blockRate =
@@ -255,11 +323,25 @@ export function LiveRadar() {
             <h1 className="radar-title">Real-Time Threat Radar</h1>
           </div>
           <p className="radar-subtitle">
-            Autonomous transaction stream scoring & synthetic attack simulation playground
+            Autonomous multi-currency stream scoring (₹ Rupees, $ USD, £ GBP, € EUR, ¥ JPY)
           </p>
         </div>
 
         <div className="radar-controls-group">
+          {/* Currency Display Selector */}
+          <div className="currency-selector-wrap" title="Currency display mode">
+            <Globe size={14} className="text-muted" />
+            <select
+              className="radar-speed-select currency-select"
+              value={currencyMode}
+              onChange={(e) => setCurrencyMode(e.target.value)}
+            >
+              <option value="native">Currency: Native by Country (₹, $, £, €)</option>
+              <option value="INR">Currency: Convert to INR (₹ Rupees)</option>
+              <option value="USD">Currency: Convert to USD ($ Dollar)</option>
+            </select>
+          </div>
+
           <button
             type="button"
             className={`radar-action-btn ${audioEnabled ? "active" : ""}`}
@@ -307,7 +389,7 @@ export function LiveRadar() {
       {/* Live HUD Telemetry Cards */}
       <div className="radar-hud-grid">
         <div className="hud-card">
-          <span className="hud-label">Stream Rate</span>
+          <span className="hud-label">Stream Throughput</span>
           <strong className="hud-value">
             {active ? (1000 / speed).toFixed(1) : "0.0"} <span className="hud-unit">TPS</span>
           </strong>
@@ -317,25 +399,27 @@ export function LiveRadar() {
         <div className="hud-card danger-hud">
           <span className="hud-label">Fraud Intercepted Value</span>
           <strong className="hud-value text-danger">
-            ${metrics.interceptedDollars.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            {currencyMode === "USD"
+              ? `$ ${(metrics.interceptedInr / 83.5).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+              : `₹ ${metrics.interceptedInr.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
           </strong>
-          <span className="hud-sub">{metrics.interceptedCount} malicious intents blocked</span>
+          <span className="hud-sub">
+            {metrics.interceptedCount} malicious attacks neutralized
+          </span>
         </div>
 
         <div className="hud-card">
-          <span className="hud-label">Auto-Block Rate</span>
-          <strong className="hud-value">
-            {blockRate}%
-          </strong>
-          <span className="hud-sub">Scored against {metrics.totalScored} intents</span>
+          <span className="hud-label">Threat Block Rate</span>
+          <strong className="hud-value">{blockRate}%</strong>
+          <span className="hud-sub">Scored across {metrics.totalScored} intents</span>
         </div>
 
         <div className="hud-card">
-          <span className="hud-label">Engine Latency</span>
+          <span className="hud-label">Scoring Latency</span>
           <strong className="hud-value text-success">
             {metrics.avgLatency} <span className="hud-unit">ms</span>
           </strong>
-          <span className="hud-sub">Real-time p99 SLA</span>
+          <span className="hud-sub">Autonomous SLA p99</span>
         </div>
       </div>
 
@@ -374,7 +458,6 @@ export function LiveRadar() {
               {blips.map((blip) => {
                 // Convert polar to cartesian (% from center 50%, 50%)
                 const rad = (blip.angle * Math.PI) / 180;
-                // scale radius to fit in 0-48%
                 const r = (blip.radius / 100) * 45;
                 const left = 50 + r * Math.cos(rad);
                 const top = 50 + r * Math.sin(rad);
@@ -393,7 +476,7 @@ export function LiveRadar() {
                     className={`radar-blip ${colorClass}`}
                     style={{ left: `${left}%`, top: `${top}%` }}
                     onClick={() => setSelectedTx(blip)}
-                    title={`${blip.merchant} ($${blip.amount}) - Risk: ${blip.risk} [${blip.status}]`}
+                    title={`${blip.merchant} (${renderFormattedAmount(blip.amount, blip.country)}) - Risk: ${blip.risk} [${blip.status}]`}
                   >
                     <span className="blip-pulse" />
                   </button>
@@ -419,14 +502,27 @@ export function LiveRadar() {
             <div className="attack-buttons-grid">
               <button
                 type="button"
+                className="drill-btn drill-btn-amber"
+                onClick={triggerUpiSmurfingAttack}
+                disabled={Boolean(attackActive)}
+              >
+                <Coins size={16} />
+                <div>
+                  <strong>UPI Smurfing Loop (India)</strong>
+                  <span>6 rapid ₹49,999 transfers</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
                 className="drill-btn drill-btn-red"
                 onClick={triggerCardTestingAttack}
                 disabled={Boolean(attackActive)}
               >
                 <Zap size={16} />
                 <div>
-                  <strong>Card Testing Storm</strong>
-                  <span>10 rapid $1–$3 micro-charges</span>
+                  <strong>Global Card Testing</strong>
+                  <span>Micro-charges in ₹, $, £, €</span>
                 </div>
               </button>
 
@@ -439,20 +535,7 @@ export function LiveRadar() {
                 <AlertTriangle size={16} />
                 <div>
                   <strong>Account Takeover (ATO)</strong>
-                  <span>High-velocity $9,800 cashouts</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className="drill-btn drill-btn-amber"
-                onClick={triggerMuleAttack}
-                disabled={Boolean(attackActive)}
-              >
-                <Sparkles size={16} />
-                <div>
-                  <strong>Mule Smurfing Ring</strong>
-                  <span>Structured sub-$10k dispersal</span>
+                  <span>₹4,85,000 / $9,800 wire drain</span>
                 </div>
               </button>
             </div>
@@ -509,7 +592,7 @@ export function LiveRadar() {
                   </div>
 
                   <div className="row-right">
-                    <div className="row-amount">${tx.amount.toFixed(2)}</div>
+                    <div className="row-amount">{renderFormattedAmount(tx.amount, tx.country)}</div>
                     <span
                       className={`row-status-pill ${tx.status === "BLOCKED" ? "pill-danger" : tx.status === "CHALLENGE" ? "pill-amber" : "pill-success"}`}
                     >
@@ -539,13 +622,17 @@ export function LiveRadar() {
                   <span>Merchant:</span> <strong>{selectedTx.merchant}</strong>
                 </div>
                 <div>
-                  <span>Amount:</span> <strong>${selectedTx.amount.toFixed(2)}</strong>
+                  <span>Amount:</span>{" "}
+                  <strong>{renderFormattedAmount(selectedTx.amount, selectedTx.country)} ({selectedTx.country})</strong>
                 </div>
                 <div>
-                  <span>Origin:</span> <strong>{selectedTx.city} ({selectedTx.country})</strong>
+                  <span>Origin:</span> <strong>{selectedTx.city}, {selectedTx.country}</strong>
                 </div>
                 <div>
-                  <span>Risk Score:</span> <strong className={selectedTx.risk >= 75 ? "text-danger" : "text-success"}>{selectedTx.risk} / 100</strong>
+                  <span>Risk Score:</span>{" "}
+                  <strong className={selectedTx.risk >= 75 ? "text-danger" : "text-success"}>
+                    {selectedTx.risk} / 100
+                  </strong>
                 </div>
                 <div>
                   <span>Decision:</span> <strong>{selectedTx.status}</strong>
