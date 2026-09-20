@@ -7,10 +7,6 @@
   },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://fraudshield-backend-5636.onrender.com/api/$1"
-    },
-    {
       "source": "/(.*)",
       "destination": {
         "type": "service",
