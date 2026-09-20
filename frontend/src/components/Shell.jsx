@@ -1,9 +1,10 @@
-import { Activity, BarChart3, Code2, LogOut, Menu, Moon, Network, ShieldCheck, SlidersHorizontal, Sun, Table2, X, Zap } from "lucide-react";
+import { Activity, BarChart3, Code2, LogOut, Menu, Moon, Network, Radar, ShieldCheck, SlidersHorizontal, Sun, Table2, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 
 const tabs = [
+  { id: "radar", label: "Live Radar", icon: Radar },
   { id: "analyze", label: "Analyze", icon: Activity },
   { id: "dashboard", label: "Dashboard", icon: Table2 },
   { id: "analytics", label: "Analytics", icon: BarChart3 },

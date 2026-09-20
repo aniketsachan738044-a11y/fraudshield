@@ -7,6 +7,7 @@ import { Analyze } from "./pages/Analyze.jsx";
 import { AuthPage } from "./pages/AuthPage.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
 import { DeveloperPortal } from "./pages/DeveloperPortal.jsx";
+import { LiveRadar } from "./pages/LiveRadar.jsx";
 import { NetworkGraph } from "./pages/NetworkGraph.jsx";
 import { RuleStudio } from "./pages/RuleStudio.jsx";
 
@@ -33,6 +34,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Shell activeTab={activeTab} setActiveTab={setActiveTab}>
+        {activeTab === "radar" && <LiveRadar />}
         {activeTab === "analyze" && <Analyze />}
         {activeTab === "dashboard" && <Dashboard />}
         {activeTab === "analytics" && <Analytics />}

@@ -1242,3 +1242,724 @@ td span {
   border-radius: 8px;
   border: 1px solid #eef2eb;
 }
+
+/* =========================================
+   Live Threat Radar & Attack Simulator Styles
+   ========================================= */
+
+.live-radar-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.radar-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.radar-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.radar-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.radar-subtitle {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.radar-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: radar-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes radar-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+.radar-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.radar-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.radar-action-btn:hover {
+  background: var(--input-bg);
+}
+
+.radar-action-btn.active {
+  border-color: #0284c7;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+}
+
+[data-theme="custom"] .radar-action-btn.active {
+  border-color: #7c3aed;
+  color: #c084fc;
+  background: rgba(124, 58, 237, 0.15);
+}
+
+.radar-speed-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-main);
+}
+
+/* Attack Incident Alert Banner */
+.attack-incident-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  animation: attack-flash 1.2s infinite alternate;
+}
+
+@keyframes attack-flash {
+  from { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+  to { box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+}
+
+.alert-banner-icon {
+  color: #ef4444;
+  flex-shrink: 0;
+  animation: pulse-spin 2s ease infinite;
+}
+
+.attack-banner-text strong {
+  display: block;
+  color: #ef4444;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.attack-banner-text span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* HUD Telemetry Grid */
+.radar-hud-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.hud-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.danger-hud {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), var(--card-bg));
+}
+
+.hud-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.hud-value {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.hud-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.hud-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Main Grid Layout */
+.radar-layout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.radar-scanner-panel,
+.radar-stream-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.gap-8 {
+  gap: 8px;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.radar-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dot-green { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.dot-amber { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+.dot-red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+/* Radar Viewport & Sweep Canvas */
+.radar-viewport-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.radar-circle-frame {
+  position: relative;
+  width: min(100%, 380px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(15, 118, 110, 0.06) 0%, rgba(15, 118, 110, 0.01) 70%, transparent 100%);
+  border: 2px solid rgba(15, 118, 110, 0.35);
+  box-shadow: inset 0 0 30px rgba(15, 118, 110, 0.12), 0 0 20px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+[data-theme="custom"] .radar-circle-frame {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.02) 70%, transparent 100%);
+  border-color: rgba(168, 85, 247, 0.45);
+  box-shadow: inset 0 0 35px rgba(124, 58, 237, 0.18), 0 0 24px rgba(124, 58, 237, 0.15);
+}
+
+.radar-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed rgba(15, 118, 110, 0.3);
+  pointer-events: none;
+}
+
+[data-theme="custom"] .radar-ring {
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.ring-1 { width: 25%; height: 25%; }
+.ring-2 { width: 50%; height: 50%; }
+.ring-3 { width: 75%; height: 75%; }
+.ring-4 { width: 95%; height: 95%; border-style: solid; border-color: rgba(15, 118, 110, 0.4); }
+
+.radar-axis-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(15, 118, 110, 0.25);
+  pointer-events: none;
+}
+
+.radar-axis-v {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: rgba(15, 118, 110, 0.25);
+  pointer-events: none;
+}
+
+[data-theme="custom"] .radar-axis-h,
+[data-theme="custom"] .radar-axis-v {
+  background: rgba(168, 85, 247, 0.25);
+}
+
+/* Rotating Sweep Beam */
+.radar-sweep-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(16, 185, 129, 0.08) 320deg, rgba(16, 185, 129, 0.35) 360deg);
+  animation: radar-sweep 4s linear infinite;
+  pointer-events: none;
+}
+
+[data-theme="custom"] .radar-sweep-beam {
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(168, 85, 247, 0.1) 320deg, rgba(168, 85, 247, 0.45) 360deg);
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-center-hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--bg-surface);
+  border: 2px solid #0f766e;
+  color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  z-index: 5;
+}
+
+[data-theme="custom"] .radar-center-hub {
+  border-color: #7c3aed;
+  color: #c084fc;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.5);
+}
+
+/* Plotted Blips */
+.radar-blip {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  z-index: 6;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.radar-blip:hover {
+  transform: translate(-50%, -50%) scale(1.6);
+  z-index: 10;
+}
+
+.blip-green {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.blip-amber {
+  background: #f59e0b;
+  box-shadow: 0 0 12px #f59e0b;
+}
+
+.blip-red {
+  background: #ef4444;
+  box-shadow: 0 0 16px #ef4444;
+  animation: blip-flash 1s infinite alternate;
+}
+
+@keyframes blip-flash {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.35); }
+}
+
+/* Attack Simulator Drill Box */
+.attack-drill-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--card-border);
+}
+
+.drill-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.drill-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.attack-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.drill-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drill-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.drill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.drill-btn strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.drill-btn span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.drill-btn-red:hover:not(:disabled) {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.drill-btn-purple:hover:not(:disabled) {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+}
+
+.drill-btn-amber:hover:not(:disabled) {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+/* Stream Log Feed */
+.terminal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.stream-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.icon-btn-sm {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  padding: 0;
+  border: 1px solid var(--card-border);
+}
+
+.radar-stream-feed {
+  max-height: 480px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.stream-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-radar-icon {
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+
+.stream-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stream-row:hover,
+.stream-row.row-selected {
+  border-color: #38bdf8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="custom"] .stream-row:hover,
+[data-theme="custom"] .stream-row.row-selected {
+  border-color: #a855f7;
+}
+
+.row-blocked {
+  border-left: 4px solid #ef4444;
+}
+
+.row-challenge {
+  border-left: 4px solid #f59e0b;
+}
+
+.row-approved {
+  border-left: 4px solid #10b981;
+}
+
+.row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.risk-badge-sm {
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 32px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.badge-amber {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.row-merchant {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.row-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.row-amount {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.row-status-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.pill-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.pill-amber {
+  background: #f59e0b;
+  color: white;
+}
+
+.pill-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+/* Stream Inspector Drawer */
+.stream-inspector {
+  padding: 14px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.inspector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  font-size: 12px;
+}
+
+.inspector-grid span {
+  color: var(--text-muted);
+}
+
+.inspector-grid strong {
+  color: var(--text-main);
+  margin-left: 4px;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .radar-hud-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .radar-layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attack-buttons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
