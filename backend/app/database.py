@@ -51,4 +51,17 @@ def init_db() -> None:
                 if col_name not in existing_cols and "id" in existing_cols:
                     conn.execute(text(f"ALTER TABLE transactions ADD COLUMN {col_name} {col_type};"))
 
+    # Ensure default demo user exists for fresh cloud deployments
+    with SessionLocal() as db:
+        existing_user = db.query(models.User).filter(models.User.email == "test@example.com").first()
+        if not existing_user:
+            from app.security import hash_password
+            demo = models.User(
+                email="test@example.com",
+                full_name="aniket",
+                hashed_password=hash_password("password123"),
+            )
+            db.add(demo)
+            db.commit()
+
 
