@@ -1,6 +1,7 @@
-import { Activity, BarChart3, Code2, LogOut, Menu, Network, ShieldCheck, SlidersHorizontal, Table2, X } from "lucide-react";
+import { Activity, BarChart3, Code2, LogOut, Menu, Moon, Network, ShieldCheck, SlidersHorizontal, Sun, Table2, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 const tabs = [
   { id: "analyze", label: "Analyze", icon: Activity },
@@ -15,6 +16,7 @@ const tabs = [
 export function Shell({ activeTab, setActiveTab, children }) {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="app-shell">
@@ -27,6 +29,34 @@ export function Shell({ activeTab, setActiveTab, children }) {
             <strong>FraudShield</strong>
             <span>Risk console</span>
           </div>
+        </div>
+
+        {/* Theme Mode Switcher */}
+        <div className="theme-toggle-group">
+          <button
+            type="button"
+            className={`theme-btn ${theme === "light" ? "active" : ""}`}
+            onClick={() => setTheme("light")}
+            title="Light Mode"
+          >
+            <Sun size={14} /> Light
+          </button>
+          <button
+            type="button"
+            className={`theme-btn ${theme === "dark" ? "active" : ""}`}
+            onClick={() => setTheme("dark")}
+            title="Dark Mode"
+          >
+            <Moon size={14} /> Dark
+          </button>
+          <button
+            type="button"
+            className={`theme-btn ${theme === "custom" ? "active" : ""}`}
+            onClick={() => setTheme("custom")}
+            title="Custom Cyberpunk Mode"
+          >
+            <Zap size={14} /> Custom
+          </button>
         </div>
 
         <nav className="nav-list">

@@ -29,11 +29,17 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const response = await api.login({ email, password });
+    if (response.access_token) {
+      localStorage.setItem("fraudshield_token", response.access_token);
+    }
     setUser(response.user);
   }
 
   async function register(payload) {
     const response = await api.register(payload);
+    if (response.access_token) {
+      localStorage.setItem("fraudshield_token", response.access_token);
+    }
     setUser(response.user);
   }
 
@@ -41,6 +47,7 @@ export function AuthProvider({ children }) {
     try {
       await api.logout();
     } finally {
+      localStorage.removeItem("fraudshield_token");
       setUser(null);
     }
   }

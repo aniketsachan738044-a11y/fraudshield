@@ -8,6 +8,11 @@ async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
   if (options.body) headers.set("Content-Type", "application/json");
 
+  const token = typeof window !== "undefined" ? localStorage.getItem("fraudshield_token") : null;
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
