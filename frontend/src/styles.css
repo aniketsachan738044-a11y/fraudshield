@@ -29,16 +29,16 @@
 
 [data-theme="custom"],
 [data-theme="cyber"] {
-  --bg-app: #020805;
-  --bg-surface: #051912;
-  --bg-sidebar: #020b08;
-  --text-main: #ecfdf5;
-  --text-muted: #34d399;
-  --card-bg: #061c14;
-  --card-border: #047857;
-  --input-bg: #07251b;
-  --input-border: #059669;
-  --table-border: #064e3b;
+  --bg-app: #0a0618;
+  --bg-surface: #130c2c;
+  --bg-sidebar: #080415;
+  --text-main: #f5f3ff;
+  --text-muted: #c084fc;
+  --card-bg: #130c2c;
+  --card-border: #3b1d6e;
+  --input-bg: #1c113e;
+  --input-border: #6d28d9;
+  --table-border: #2e1065;
   color-scheme: dark;
 }
 
@@ -98,7 +98,7 @@ body {
 }
 
 [data-theme="custom"] .theme-btn.active {
-  background: #059669;
+  background: #7c3aed;
 }
 
 .panel,
@@ -177,7 +177,7 @@ button {
 }
 
 [data-theme="custom"] .auth-hero h1 {
-  color: #10b981 !important;
+  color: #c084fc !important;
 }
 
 .auth-hero p {
@@ -208,6 +208,11 @@ button {
   place-items: center;
   background: #0f766e;
   color: white;
+}
+
+[data-theme="custom"] .brand-mark {
+  background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.45);
 }
 
 .brand-mark.large {
@@ -323,6 +328,16 @@ select:focus {
   color: white;
 }
 
+[data-theme="custom"] .primary-btn {
+  background: linear-gradient(135deg, #7c3aed, #9333ea) !important;
+  color: white !important;
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.35);
+}
+
+[data-theme="custom"] .primary-btn:hover {
+  background: #6d28d9 !important;
+}
+
 .primary-btn:disabled,
 .icon-text-btn:disabled {
   opacity: 0.62;
@@ -380,7 +395,7 @@ select:focus {
 }
 
 [data-theme="custom"] .brand-row strong {
-  color: #10b981 !important;
+  color: #c084fc !important;
 }
 
 .brand-row span {
@@ -390,7 +405,7 @@ select:focus {
 }
 
 [data-theme="custom"] .brand-row span {
-  color: #6ee7b7 !important;
+  color: #e9d5ff !important;
 }
 
 .nav-list {
@@ -414,6 +429,12 @@ select:focus {
 .ghost-btn:hover {
   background: #263241;
   color: white;
+}
+
+[data-theme="custom"] .nav-list .active {
+  background: #6d28d9 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(109, 40, 217, 0.4);
 }
 
 .sidebar-footer {
@@ -484,8 +505,9 @@ select:focus {
 }
 
 [data-theme="custom"] .theme-mode-btn {
-  color: #34d399 !important;
-  border-color: rgba(52, 211, 153, 0.3) !important;
+  color: #c084fc !important;
+  border-color: rgba(192, 132, 252, 0.35) !important;
+  background: rgba(192, 132, 252, 0.1) !important;
 }
 
 .logout-btn {
@@ -518,9 +540,9 @@ select:focus {
 }
 
 [data-theme="custom"] .theme-mobile-btn {
-  border-color: rgba(52, 211, 153, 0.35);
-  background: rgba(52, 211, 153, 0.12);
-  color: #34d399;
+  border-color: rgba(192, 132, 252, 0.35);
+  background: rgba(192, 132, 252, 0.12);
+  color: #c084fc;
 }
 
 [data-theme="light"] .theme-mobile-btn {
@@ -1028,7 +1050,7 @@ td span {
   }
 
   [data-theme="custom"] .mobile-topbar strong {
-    color: #10b981 !important;
+    color: #c084fc !important;
   }
 
   .topbar-logout {
@@ -1086,9 +1108,9 @@ td span {
   }
 
   [data-theme="custom"] .mobile-tabs .active {
-    background: #059669;
-    color: #ecfdf5;
-    border-color: #059669;
+    background: #7c3aed;
+    color: #ffffff;
+    border-color: #7c3aed;
   }
 
   .icon-btn {
