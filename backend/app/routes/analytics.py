@@ -18,11 +18,15 @@ from app.schemas import (
     RiskBreakdownItem,
     SARReportResponse,
 )
+import httpx
+
+from app.config import get_settings
 from app.security import get_current_user
 from app.services.fraud_engine import fraud_engine
 
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
+settings = get_settings()
 
 
 @router.get("/summary", response_model=AnalyticsSummary)
@@ -259,6 +263,35 @@ def investigate_case(
         f"Geographic and velocity analysis indicated non-standard beneficiary exposure (beneficiary age {tx.receiver_age_days} days). "
         f"This filing is formally submitted in accordance with statutory reporting standards for suspicious financial conduct."
     )
+
+    if settings.gemini_api_key:
+        try:
+            prompt = (
+                f"You are a Senior Financial Crime Compliance & Anti-Money Laundering (AML) Investigator. "
+                f"Draft a formal, legally rigorous Suspicious Activity Report (SAR) narrative based on these forensic facts:\n"
+                f"- Filing ID: {filing_id}\n"
+                f"- Subject Account: {current_user.email} (ID: {current_user.id})\n"
+                f"- Counterparty: {tx.receiver_id}\n"
+                f"- Amount: INR {tx.amount:,.2f} via {tx.channel.upper()}\n"
+                f"- Risk Score: {tx.risk_score}/100 ({tx.risk_level.upper()})\n"
+                f"- Triggered Risk Flags: {', '.join(top_flags)}\n"
+                f"- Statutory Violations: {', '.join(violations)}\n"
+                f"Generate a professional, court-admissible narrative detailing the timeline, modus operandi, and financial impact."
+            )
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.gemini_api_key}",
+                    json={"contents": [{"parts": [{"text": prompt}]}]},
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates and "content" in candidates[0]:
+                        parts = candidates[0]["content"].get("parts", [])
+                        if parts and "text" in parts[0]:
+                            narrative = parts[0]["text"]
+        except Exception:
+            pass
 
     return SARReportResponse(
         filing_id=filing_id,

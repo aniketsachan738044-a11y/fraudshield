@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     webhook_secret: str | None = None
     trust_proxy_headers: bool = False
     model_artifact_path: str = "artifacts/fraud_model.joblib"
+    gemini_api_key: str | None = None
 
     # Stripe & Razorpay Gateway Credentials
     stripe_secret_key: str | None = None
