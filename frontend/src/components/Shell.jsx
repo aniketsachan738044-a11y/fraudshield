@@ -18,6 +18,14 @@ export function Shell({ activeTab, setActiveTab, children }) {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
 
+  const cycleTheme = () => {
+    if (theme === "dark") setTheme("light");
+    else if (theme === "light") setTheme("custom");
+    else setTheme("dark");
+  };
+
+  const themeLabel = theme === "light" ? "Light" : theme === "dark" ? "Dark" : "Custom";
+
   return (
     <div className="app-shell">
       <aside className={`sidebar ${open ? "open" : ""}`}>
@@ -29,34 +37,6 @@ export function Shell({ activeTab, setActiveTab, children }) {
             <strong>FraudShield</strong>
             <span>Risk console</span>
           </div>
-        </div>
-
-        {/* Theme Mode Switcher */}
-        <div className="theme-toggle-group">
-          <button
-            type="button"
-            className={`theme-btn ${theme === "light" ? "active" : ""}`}
-            onClick={() => setTheme("light")}
-            title="Light Mode"
-          >
-            <Sun size={14} /> Light
-          </button>
-          <button
-            type="button"
-            className={`theme-btn ${theme === "dark" ? "active" : ""}`}
-            onClick={() => setTheme("dark")}
-            title="Dark Mode"
-          >
-            <Moon size={14} /> Dark
-          </button>
-          <button
-            type="button"
-            className={`theme-btn ${theme === "custom" ? "active" : ""}`}
-            onClick={() => setTheme("custom")}
-            title="Custom Cyberpunk Mode"
-          >
-            <Zap size={14} /> Custom
-          </button>
         </div>
 
         <nav className="nav-list">
@@ -83,10 +63,23 @@ export function Shell({ activeTab, setActiveTab, children }) {
             <span>{user?.email?.slice(0, 1).toUpperCase()}</span>
             <p>{user?.email}</p>
           </div>
-          <button className="ghost-btn" onClick={logout}>
-            <LogOut size={17} />
-            Sign out
-          </button>
+          <div className="footer-actions">
+            <button
+              type="button"
+              className="ghost-btn theme-mode-btn"
+              onClick={cycleTheme}
+              title={`Theme: ${themeLabel} (Click to switch Light / Dark / Custom)`}
+            >
+              {theme === "light" && <Sun size={15} />}
+              {theme === "dark" && <Moon size={15} />}
+              {theme === "custom" && <Zap size={15} />}
+              <span>{themeLabel}</span>
+            </button>
+            <button type="button" className="ghost-btn logout-btn" onClick={logout}>
+              <LogOut size={15} />
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -95,10 +88,23 @@ export function Shell({ activeTab, setActiveTab, children }) {
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
         <strong>FraudShield</strong>
-        <button className="topbar-logout" onClick={logout} aria-label="Sign out">
-          <LogOut size={17} />
-          Logout
-        </button>
+        <div className="mobile-topbar-right">
+          <button
+            type="button"
+            className="icon-btn theme-mobile-btn"
+            onClick={cycleTheme}
+            title={`Switch theme (Current: ${themeLabel})`}
+            aria-label="Switch theme"
+          >
+            {theme === "light" && <Sun size={18} />}
+            {theme === "dark" && <Moon size={18} />}
+            {theme === "custom" && <Zap size={18} />}
+          </button>
+          <button className="topbar-logout" onClick={logout} aria-label="Sign out">
+            <LogOut size={17} />
+            Logout
+          </button>
+        </div>
       </header>
 
       <nav className="mobile-tabs" aria-label="Primary navigation">
