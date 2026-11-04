@@ -16,7 +16,6 @@ async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
-    credentials: "include",
   });
 
   const contentType = response.headers.get("content-type") || "";
@@ -71,10 +70,10 @@ export const api = {
   investigateCase: (data) => request("/analytics/investigate-case", { method: "POST", body: JSON.stringify(data || {}) }),
 };
 
-
-
 export async function downloadCsv() {
-  const response = await fetch(`${API_URL}/transactions/export.csv`, { credentials: "include" });
+  const token = typeof window !== "undefined" ? localStorage.getItem("fraudshield_token") : null;
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const response = await fetch(`${API_URL}/transactions/export.csv`, { headers });
   if (!response.ok) throw new Error("Could not export report");
 
   const blob = await response.blob();
@@ -89,7 +88,9 @@ export async function downloadCsv() {
 }
 
 export async function downloadPdf() {
-  const response = await fetch(`${API_URL}/transactions/export.pdf`, { credentials: "include" });
+  const token = typeof window !== "undefined" ? localStorage.getItem("fraudshield_token") : null;
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const response = await fetch(`${API_URL}/transactions/export.pdf`, { headers });
   if (!response.ok) throw new Error("Could not export PDF report");
 
   const blob = await response.blob();
